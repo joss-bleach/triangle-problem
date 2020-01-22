@@ -17,7 +17,15 @@ fs.createReadStream(input)
   .on("data", data => inputData.push(data))
   .on("end", () => {
     // Get the origin year - remove whitespace
-    let originYear = inputData[0].originyear.trim(" ");
+    let originYears = [];
+    inputData.forEach(element => {
+      originYears.push(parseInt(element.originyear));
+    });
+    function sortNumber(a, b) {
+      return a - b;
+    }
+    originYears.sort(sortNumber);
+    let originYear = originYears[0];
 
     // Number of development years
     function countUnique(iterable) {
@@ -38,9 +46,8 @@ fs.createReadStream(input)
     var accumAmount;
 
     for (i = 0; i < inputData.length; i++) {
-      // Get the name of the current product
       let currentProduct = inputData[i].product;
-      // Check if the current product is the same as the first product
+
       if (currentProduct == firstProduct) {
         // Check whether this product is in the output array
         formatProduct = "\n " + currentProduct;
@@ -50,8 +57,23 @@ fs.createReadStream(input)
         if (inputData[i].originyear == inputData[i].developmentyear) {
           accumAmount = parseFloat(inputData[i].incrementalvalue);
           outputArray.push(parseFloat(inputData[i].incrementalvalue));
-        } else if (inputData[i].originyear != inputData[i].developmentyear) {
+        } else if (
+          parseInt(inputData[i].developmentyear) ==
+          parseInt(inputData[i - 1].developmentyear) + 1
+        ) {
           accumAmount = accumAmount + parseFloat(inputData[i].incrementalvalue);
+          outputArray.push(accumAmount);
+        } else if (
+          parseInt(inputData[i].originyear) ==
+            parseInt(inputData[i - 1].originyear) &&
+          parseInt(inputData[i].developmentyear) >
+            parseInt(inputData[i - 1].developmentyear) + 1
+        ) {
+          outputArray.push(accumAmount);
+          accumAmount = accumAmount + parseFloat(inputData[i].incrementalvalue);
+          outputArray.push(accumAmount);
+        } else if (parseInt(inputData[i].originyear) > originYear) {
+          accumAmount = 0;
           outputArray.push(accumAmount);
         }
       } else if (currentProduct != firstProduct) {
@@ -62,13 +84,24 @@ fs.createReadStream(input)
         if (inputData[i].originyear == inputData[i].developmentyear) {
           accumAmount = parseFloat(inputData[i].incrementalvalue);
           outputArray.push(parseFloat(inputData[i].incrementalvalue));
-        } else if (inputData[i].originyear != inputData[i].developmentyear) {
+        } else if (
+          parseInt(inputData[i].developmentyear) ==
+          parseInt(inputData[i - 1].developmentyear) + 1
+        ) {
+          accumAmount = accumAmount + parseFloat(inputData[i].incrementalvalue);
+          outputArray.push(accumAmount);
+        } else if (
+          parseInt(inputData[i].originyear) ==
+            parseInt(inputData[i - 1].originyear) &&
+          parseInt(inputData[i].developmentyear) >
+            parseInt(inputData[i - 1].developmentyear) + 1
+        ) {
+          outputArray.push(accumAmount);
           accumAmount = accumAmount + parseFloat(inputData[i].incrementalvalue);
           outputArray.push(accumAmount);
         }
       }
     }
-
     // Format the array as a string
     var arrayToList = outputArray.toString() + "\r\n";
 
@@ -77,4 +110,5 @@ fs.createReadStream(input)
 
     // Write to output file
     fs.writeFileSync("outputs/output.csv", output);
+    console.log("Input to  outputs/output.csv");
   });
