@@ -1,4 +1,4 @@
-const csv = require("csv-parser");
+const csv = require("./csv-parser/index.js");
 const fs = require("fs");
 
 const input = "input.csv";
